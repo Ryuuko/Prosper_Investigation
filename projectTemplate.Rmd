@@ -1,0 +1,698 @@
+TITLE by YOUR_NAME_HERE
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using
+# in your analysis in this code chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk.
+# This prevents the code from displaying in the knitted HTML output.
+# You should set echo=FALSE for all code chunks in your file.
+
+library(ggplot2)
+library(dplyr)
+```
+```{r echo=FALSE, Univariate_Plots}
+names(pLD)
+
+```{r} 
+names(pLD)
+```
+```{r}
+
+str(pLD)
+```
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+getwd()
+pLD <- read.csv('prosperLoanData.csv')
+
+
+
+comparation <- subset(pLD[c(44, 81)])
+```
+
+# Univariate Plots Section
+As we can see, this is the dataset which includes more than 81 variables and it's impossible to investigate all of them. Before starting to start the detailed plotting section, I would like to catograize them into four main catograries in order to understand the differences and relationship between each other.
+
+#About reliability of borrowers
+
+* Employment Status
+* Employment Status Duration
+* Occupation
+* Home owner
+* Income Range
+* StatedMonthlyIncome
+* IncomeVerifiable
+
+These are the factors when we consider if a borrow is able to pay the loan or not. By intuition, some who own his own house and has a good job with high income should pay the credit with more reputation. 
+
+# valuation about Borrower
+
+* Credit Grade
+* Credit Score
+* Prosper Rating
+* CreditScoreRange
+
+
+Except CreditLines, who only implicitly shows how many loan a borrower should deserve to have, other variables are just using different ways, or differet grading system established by different organisation, to describe the reputation of the borrower in term of borrrowing.
+
+# Credit charactoristic
+* Borrower APR/RATE/Lender Yield
+* Loan Original Amount
+* Term
+* investor
+
+These variables describe how is the P2P-credit formed.
+
+# after the launch of Credit
+
+* Revovlving Account
+* Loan Status
+* DelinquenciesAmount
+
+These variables happen only after the the credit is issued.
+
+
+These four catogaries actually follow by the time line of the launch of credit. From the formation of the personilty of borrower, to the valuation to his/her, then the credit will be valued by the investors. At the end, the credit will be issued and the payment begins.
+
+First of all, we start our Univariate Plots by following this time line.
+
+
+#1. About reliability of borrowers
+
+```{r}
+#EmploymentStatus
+ggplot(aes(EmploymentStatus), data = pLD) + geom_bar()
+```
+The majority of borrowers belong to the "Employed", which is actually an ambiguous term and doesn't tell us whether the borrowers are working on basis of "Part-time" or "Full-time". And "self-emplyed" can be interpreted as a type of "employed". But as least these four types of "employed" dominate the employment status. These four types of people have a job and overwhelmingly represent the majority:
+
+```{r}
+employed <- subset(pLD, EmploymentStatus == "Employed" | EmploymentStatus == "Full-time" | EmploymentStatus == "Part-time" | EmploymentStatus == "Self-employed")
+
+nrow(employed)/nrow(pLD)
+
+```
+
+
+What does it mean with the blank on the left-hand side? Did the borrower missed filling the statement about their employment Status? Let's zoom this kind of "blank" Status:
+
+```{r}
+blank_employment <- subset(pLD, EmploymentStatus == "")
+summary(blank_employment$LoanStatus)
+
+```
+The interesting thing is that none of these credits is current credit or past due. They are completed, or fail to pay the credit in states of defaulted or charged-off, which are "ended" on some sense. This may not be a mere coincidence and later we can see that lots of our data come from current credit.
+
+```{r}
+# EmploymentStatusDuration
+ggplot(aes(EmploymentStatusDuration), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 600), breaks = seq(0, 600, 30))
+```
+It presents a very neat trend of the duration. The detail of the trend is that differences between groups of bin become smaller, as the duration goes up, so that we can observe the curve become flater around the left hand side of the graph.
+
+It is resonable since it may also imply age distribution:The younger you are, the shorter you've worked. Obviously, P2P borrowing is relatively a new concept comparing to the tradition finanical instruments, which should be recognized by more young poeple than elderly.
+
+#Occupation
+```{r}
+
+occupation_plot <- ggplot(aes(Occupation), data = pLD) + geom_bar() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+occupation_plot
+```
+Again, there are ambiguous catogories. This time, they are "Other" and "Professional" which don't tell a specific name of the jobs. Like the section of "Employment Status", lot of people intend to hide their private informations. I wonder if these kinds of borrowers tend to hide the details of these two sections at the same time.
+
+```{r}
+detail_hiding <- subset(pLD[c("Occupation", "EmploymentStatus")], EmploymentStatus == "Employed")
+hiding_occupation_plot <- ggplot(aes(Occupation), data = detail_hiding) + geom_bar() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+hiding_occupation_plot
+```
+It seems that there are almost no differences between the distribution form. The second one is just like the the version of the first one with smaller amount on y-axis. Using ambiguous catogary may be not a important feature to consider.
+```{r}
+#home owner
+ggplot(aes(IsBorrowerHomeowner), data = pLD) + geom_bar()
+
+table(pLD$IsBorrowerHomeowner)
+```
+The differences is about 1000 people, which is less than 1% of the objects in the whole dataset.
+
+```{r}
+#Income Range
+
+pLD$IncomeRange <- factor(pLD$IncomeRange,
+                          levels = c(
+    "Not displayed",
+    "Not employed",
+    "$0",
+    "$1-24,999",
+    "$25,000-49,999",
+    "$50,000-74,999",
+    "$75,000-99,999",
+    "$100,000+"
+    ))
+levels(pLD$IncomeRange)
+ggplot(aes(IncomeRange), data = pLD) + geom_bar()
+```
+It seems a reasonalbe distribution, because the most of distribution concentrate to the range of "$25,000-49,999" and "$50,000-74,999", the middle of the income range. And we should compare it to the stated monthly Income in order to verify the data.
+```{r}
+#StatedMonthlyIncome
+ggplot(aes(StatedMonthlyIncome), data = subset(pLD, !is.na(StatedMonthlyIncome))) + geom_histogram() + scale_x_continuous(limits = c(0, 40000)) + 
+                geom_freqpoly() 
+```
+It has the simliar form of slightly Skewed distribution. But is the data of income reliable? We can limit the data set with the variable of IncomeVerifiable.
+
+```{r}
+# IncomeVerifiable?
+
+summary(pLD$IncomeVerifiable)
+ggplot(aes(IncomeRange), data = subset(pLD, IncomeVerifiable == "True")) + geom_bar()
+
+
+ggplot(aes(x = StatedMonthlyIncome), data = pLD) + geom_freqpoly(color = "yellow") + scale_x_continuous(limits = c(0, 40000)) + geom_freqpoly(data = subset(pLD, IncomeVerifiable == "True"), aes(color = StatedMonthlyIncome), color = "orange") + theme_minimal()
+
+```
+The first picture of our Income Range distribution has no obvious changes. The second picture shows the differences between the original and the one which excludes the unverified data. These two lines show the similar form. It means most of our data about income is trustable.
+
+# 2. valuation about Borrower
+
+There are three different ways to describe the grading:
+
+* Credit Grade
+* Prosper Rating
+* Credit Score Range
+
+During my research, no evidence has been found to show that the Credit Score Range in this data set come from the FICO score or Vantage score, which two of the most famous for credit grading,
+
+https://www.creditsesame.com/blog/credit/credit-score-range-for-experian-transunion-equifax/
+
+since the range doesn't stay consistant to their standards. 
+
+
+
+https://www.creditsesame.com/blog/credit/credit-score-range-for-experian-transunion-equifax/
+
+https://your.vantagescore.com/interpret_scores
+
+First of all, we need to make a subset including these variables or relative variables in order to examine them with a closer look.
+
+```{r}
+grade_comparation <- pLD[c("LoanStatus", "CreditGrade", "ProsperRating..Alpha.", "ProsperScore", "CreditScoreRangeLower", "CreditScoreRangeUpper")]
+
+summary(subset(grade_comparation, CreditGrade == "E")$CreditScoreRangeUpper)
+summary(subset(grade_comparation, CreditGrade == "D")$CreditScoreRangeUpper)
+summary(subset(grade_comparation, CreditGrade == "C")$CreditScoreRangeUpper)
+```
+
+
+Although we don't know from what kind of institution the credit grade was issued, according to the common definition of credit grade, we know that the grade of E to A represent the credit reputation from bad to the better position. The only one which is worse than E is the grade of HR.
+
+As we can see, the credit score range seems to relate to the credit grade, since as the credit grade goes up, the range of credit score goes up as well.
+
+But it is a different story when we examine the rating from prosper:
+
+```{r}
+
+summary(subset(grade_comparation, ProsperRating..Alpha. == "E")$CreditScoreRangeUpper)
+summary(subset(grade_comparation, ProsperRating..Alpha. == "D")$CreditScoreRangeUpper)
+summary(subset(grade_comparation, ProsperRating..Alpha. == "C")$CreditScoreRangeUpper)
+
+```
+From the grade of E to C, the they share the same minimum range of credit score. The maximum score of grade C is just a little bit higher than D and E.
+
+We can examine the differences between these two system of rating by using graphs:
+
+
+```{r}
+pLD$CreditGrade <- factor(pLD$CreditGrade,
+                          levels = c(
+ "", "NC", "HR", "E", "D", "C", "B", "A", "AA" 
+    ))
+ggplot(aes(CreditGrade), data = pLD) + geom_bar() 
+```
+
+
+```{r}
+pLD$ProsperRating..Alpha. <- factor(pLD$ProsperRating..Alpha.,
+                          levels = c(
+ "", "HR", "E", "D", "C", "B", "A", "AA" 
+    ))
+ggplot(aes(ProsperRating..Alpha.), data = pLD) + geom_bar() 
+```
+
+So why ist the "Null value" also the largest part in these two graphs? It is found that all of the credit grade are only applied to the "ended" loan but never to the current loan.
+```{r}
+non_null_CreditGrade <- subset(pLD, CreditGrade != "")
+summary(non_null_CreditGrade$LoanStatus)
+```
+At the first time, I thought that the credit grade was only applied to the "ended" credit. So it is reasonable to assume the prosper rating only reveal the current credit. But: it isn't. It includes all kind of situation:
+
+```{r}
+non_null_ProsperRating <- subset(pLD, ProsperRating..Alpha. != "")
+summary(non_null_ProsperRating$LoanStatus)
+```
+
+And there are no a single row of data consist two grading.
+
+```{r}
+Rating_same_time <- subset(pLD, ProsperRating..Alpha. != "" & CreditGrade != "")
+nrow(Rating_same_time)
+```
+
+
+The weirder thing is : the score range is always filled and has no any null value.
+
+```{r}
+non_null_lower_score <- subset(pLD, CreditScoreRangeLower == "")
+nrow(non_null_lower_score)
+non_null_upper_score <- subset(pLD, CreditScoreRangeUpper == "")
+nrow(non_null_upper_score) 
+```
+
+That means we can have the whole picture of the data set via the credit score:
+
+```{r}
+# sum up and take the average number of the score range to help building better view of scope
+pLD <- transform(pLD, average_score = (CreditScoreRangeLower + CreditScoreRangeUpper)/2)
+
+
+ggplot(aes(average_score), data = pLD) + geom_histogram()
+
+#ignore the extreme low value of credit to have better view of the histogram
+
+ggplot(aes(average_score), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(350, 1000), breaks = seq(0, 1000, 125)) 
+
+```
+
+To conclude from these results:
+
+1. When we want to investigae the credit performance of all the borrowers, we can use average score of the score range. Although the source of the score is unknown, it covers all of the data of borrower. 
+
+In principle, the rating from Prosper is less believable because the rating is displayed on the homepage of the prosper for investors to choose the products, 
+https://www.prosper.com/invest
+
+which means the rating may not be accurate to represent the credibility of the borrowers, but may consider making some investment more attractive. We can investigate it in the Bivariate Analysis section.
+
+2. When we want to investigate the relationship between the rating and the number of investors, we should use the Prosper Rating. As we just discussed, the rating is revealed as the important part of description of the borrower's status. But we should be careful to use it since it's limited to the current loan.
+
+
+
+
+# Credit charactoristic
+
+* Borrower APR/RATE/Lender Yield
+
+Actually these three variables describe the same thing on three different angles: interest rate.
+
+The differences between Lender Yield and Borrower Rate is "a servicing fee charged by the originator to the investor each time a payment is made".
+https://www.orchardplatform.com/blog/2014519lender-yield-prosper/(it seems that it is using the same Prosper Dataset as well)
+The "orignator" here is Prosper.
+
+Moreover, the borrowers need to pay the extra fee the orignator/Prosper. That is the differences between Borrower APR and Borrower Rate. The first one include "other charges or fees such as mortgage insurance, most closing costs, discount points and loan origination fees."
+
+https://www.bankofamerica.com/mortgage/learn/apr-vs-interest-rate/
+
+So, the relationship between Borrower APR and Lender Yield should be like this:
+
+Borrower APR = Lender Yield +  + extra fee paid by investors/lenders + extra fee paid by borrowers
+ 
+So we can be sure that all the rate generally will move higher by following the order of "Lender Yield < Borrower Rate < Borrower APR".
+
+
+```{r}
+install.packages("cowplot")
+library(cowplot)
+plot_grid(LY, BR, BA, ncol=1, align="hv")
+
+
+library(gridExtra)
+theme_set(theme_grey())
+
+LY <- ggplot(aes(LenderYield), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 0.4), breaks = seq(0, 0.4, 0.05))
+
+BR <- ggplot(aes(BorrowerRate), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 0.4), breaks = seq(0, 0.4, 0.05))
+
+BA <- ggplot(aes(BorrowerAPR), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 0.4), breaks = seq(0, 0.4, 0.05))
+
+grid.arrange(LY, BR, BA, ncol = 1)
+
+
+```
+
+Both of the extra fees, are in the most of the time "irregular" and depend on the the condition of investors and borrowers, so that we can see the form of three graphs have subtle differences on their distributions, but the trend of moving the bar towards the right hand side is still obvious, especially the "shift" happening on the graph of Borrower APR.
+
+```{r}
+ggplot(pLD, aes(x = LenderYield, y = ..count.., color = "Lender Yield")) + geom_freqpoly() +
+  geom_freqpoly(aes(x = BorrowerRate, y = ..count.., color = "Borrower Rate")) +
+  geom_freqpoly(aes(x = BorrowerAPR, y = ..count.., color = "Borrower APR")) + xlab("Rate Comparation") + guides(color=guide_legend(title="Type of Rate"))  
+```
+
+* Loan Original Amount
+
+Next question is: how much have the borrowers borrowed?
+
+```{r}
+
+ggplot(aes(LoanOriginalAmount), data = pLD) + geom_histogram(bins= 100) + scale_x_continuous(limits = c(0, 40000), breaks = seq(0, 40000, 2500))
+
+```
+
+It is a different distribution than the interest rate which is calculated with the specific formula and weight. This one is chose by the human borrowers and it is clear that some of amounts or numbers are popular among the others.
+
+```{r}
+dataSummary <- pLD  %>%
+  group_by(LoanOriginalAmount) %>% summarise(n = n())
+
+dataSummary <- dataSummary[order(-dataSummary$n),] 
+
+head(dataSummary)
+```
+As we can see, borrowers raise their request with the simple whole numbers. It is quite understandable since borrowers don't know how much they need to finance their businesses.
+
+
+
+* Term
+
+There are three types of term in the dataset: 12, 36, 60. The number actually represents the payment duration options provided by Prosper: in how many months a borrower need to pay back the credit or so-called a monthly loan payment. 
+
+```{r}
+ggplot(aes(Term), data = pLD) + geom_bar() + scale_x_continuous(breaks = c(12, 36, 60))
+
+Terms_labels <- pLD %>%
+  group_by(Term) %>% summarise('n' = n()) %>% mutate(percent = round(n/nrow(pLD)*100)) %>% mutate(label = paste0(percent, "%")) %>% arrange(percent)
+
+ggplot(data = Terms_labels, aes(x=factor(1), , y=n, fill=factor(Term))) + geom_bar(width = 1, stat = "identity") + coord_polar(theta="y") + geom_text(aes(x=1, y = cumsum(n) - n/2, label = label))
+```
+
+The preference of 3-year loan dominates the majority of the borrowers.
+
+
+
+* investor
+
+Investors or lenders lend the money to the borrowers on the platform of Prosper.
+
+```{r}
+ggplot(aes(Investors), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 600), breaks = seq(0, 600, 30)) + scale_y_continuous(limits = c(0, 15000))
+
+```
+
+As we are having a univariable analyse, the changes of x axis/exogenous variable result in the y axis/endogenous variable. Here the endogenous variable shows how many credit there are. The graph shows us a negative correlation. When the number of investors goes up, the number of credit goes down at the same time.
+
+
+
+# after the launch of Credit
+
+* Revovlving Account
+
+According to the definition from Wikipedia, A revolving account is "an account created by a lender to represent debts where the outstanding balance does not have to be paid in full every month by the borrower to the lender."  https://en.wikipedia.org/wiki/Revolving_account
+
+But it has its limitation and the borrowers should pay the principal and interest for what he owned in the following month. http://blog.credit.com/2013/04/how-a-revolving-credit-account-works-65670/
+
+I have not heard of this term before, but to my own opinion, it creates an account to help the borrowers delay their payment. It is a interesting payment strategy to avoid damage the reputation or the creidt grade of the borrower without paying on time.
+
+```{r}
+ggplot(aes(OpenRevolvingMonthlyPayment), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 2000), breaks = seq(0, 2000, 100))
+
+summary(pLD$OpenRevolvingMonthlyPayment)
+```
+
+Just like the graph of investors, this graph shows us a negative correlation between the number of revolving payment and the number of credit borrowed. People seem not to afford another extra credit in order to keep their record. So do most of them pay the credit on time? Let's see the distribution of Loan Status.
+
+* Loan Status
+
+**Completed: fully paid off
+
+**Final Payment in Progress: move to the completed status within the next period
+
+**Current: making payments on time
+
+**Past Due: payment is missed
+
+**Charge Off: After 4 missed payments, the status of "current" will move ot "charge-off". In this situation, the investment is assumed to be lost.
+
+**Defaulted: reasons like bankruptcy make the borrowers fail to make the payment
+
+https://www.orchardplatform.com/blog/understanding-loan-statuses/
+https://en.wikipedia.org/wiki/Default_(finance)
+
+```{r}
+
+pLD$LoanStatus <- factor(pLD$LoanStatus,
+                          levels = c(
+    "Cancelled",
+    "Current",
+    "Completed",
+    "Past Due (1-15 days)",
+    "Past Due (16-30 days)",
+    "Past Due (31-60 days)",
+    "Past Due (61-90 days)",
+    "Past Due (91-120 days)",
+    "Past Due (>120 days)",
+    "Chargedoff",
+    "Defaulted"
+    ))
+
+
+ggplot(aes(LoanStatus), data = pLD) + geom_bar() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+Most of the loans is either completed or current. But the category of "Past Due (>120 days)" makes me curios. According to the definition, the column of "Past Due (>120 days)" should not exist because Past Due which is longer than 120 days should be categorized as Charged-off. Some said it is more than 180 Days. https://www.thebalance.com/deal-with-past-due-accounts-961128 / https://en.wikipedia.org/wiki/Charge-off
+
+```{r}
+nrow(subset(pLD, LoanStatus == "Past Due (>120 days)"))
+```
+The number of "Past Due (>120 days)" is only 16, which is extremely small number comparing the whole number of data data, so it is almost unobservable in the graph of Loan Status. 
+
+How about put it in another way: maybe the borrowers with charge off may owe more money? 
+
+We have the variable of "Amount of Delinquencies" to investigate. And "delinquent is an individual or corporation with a contractual obligation to make payments against a loan in a timely manner, such as through a mortgage, but payments are not made on time." 
+
+https://www.investopedia.com/terms/d/delinquent.asp
+
+```{r}
+subset(pLD, LoanStatus == "Chargedoff")["AmountDelinquent"]
+subset(pLD, LoanStatus == "Past Due (91-120 days")["AmountDelinquent"]
+```
+It is at most of time just...zero. Let's try it with the current one:
+
+```{r}
+subset(pLD, LoanStatus == "Current")["AmountDelinquent"]
+```
+
+One way to explain this phenomenon : we better see the label of loan status issued by Prosper during the period of payment. We have no idea how much and when the borrowers don't pay back on time. 
+
+The "Current" status with non-zero amount of delinquency can be explained as well. Since the status is just a label issued by Prosper right on the date the origination of the data set. Besides the status of "Complete", many other labals can be moved to other category as well. A Past-Due borrower may have the hope to move back to the "Current" status when he pay his money back on time again. But how does it happen? We may have no idea at all.
+
+Other observations:
+
+* Borrowers seem to reveal their own informations in the more ambigous way
+
+* Borrowers prefer to pay the loan in term of 36 / in three years.
+
+* The majority of the loan in the dataset is in the current status
+
+```
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+There are 113,937 credit loans in the dataset 81 features, most of the features can be divided into 4 group:
+
+*About reliability of borrowers
+*Valuation about Borrower
+*Credit charactoristic
+*After the launch of Credit
+
+
+### What is/are the main feature(s) of interest in your dataset?
+
+There are too many variables in the dataset, but by dividing them into  groups, we can simplify the logic we want to combine varables to build predictive models. 
+
+
+There are actually so many ways to predictive models because of the huge amount of variables. I'd like to determine which feature predicts the number of investors. Because it's the most important for P2P platform to attract their investors in which kind of way. 
+
+Since we want to predict the consideration of investors, first of all we need to know what kinds of elements the investors will notice.
+
+As the website of Prosper shows, there are some variable from our dataset can be found in the informations provided to the investors in the first time:
+
+Terms
+Rating - Prosper Rating
+Amount - Loan originated Amount
+estimated effective Yield 
+effective loss
+
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+how much they earn?
+
+
+### Did you create any new variables from existing variables in the dataset?
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+
+
+
+# Bivariate Plots Section
+```{r echo=FALSE, Bivariate_Plots}
+
+
+
+```
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+### What was the strongest relationship you found?
+
+
+
+
+# Multivariate Plots Section
+
+```{r echo=FALSE, Multivariate_Plots}
+
+```
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+### Were there any interesting or surprising interactions between features?
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+
+```
+
+### Description One
+
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+
+```
+
+### Description Two
+
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+
+```
+
+### Description Three
+
+------
+
+# Reflection
+
+```{r}
+#Allocation of Term
+ggplot(aes(Term), data = pLD) + geom_bar()
+summary(pLD$Term)
+ggplot(aes(Term), data = pLD) + geom_bar() + scale_x_continuous(breaks = c(12, 36, 60))
+
+Terms_labels <- pLD %>%
+  group_by(Term) %>% summarise('n' = n()) %>% mutate(percent = round(n/nrow(pLD)*100)) %>% mutate(label = paste0(percent, "%")) %>% arrange(percent)
+
+
+       
+
+Terms_labels$lbls <- paste(Terms_labels$Term, Terms_labels$label, sep="-----")
+
+# ad % to labels 
+pie(Terms_labels$n, labels = Terms_labels$lbls, col=rainbow(length(Terms_labels$lbls)))
+
+library(plotrix)
+pie3D(Terms_labels$n, labels = Terms_labels$lbls, col=rainbow(length(Terms_labels$lbls)), explode=0.1)
+```
+
+```{r}
+detail_hiding_2 <- subset(pLD[c("Occupation", "EmploymentStatus")], Occupation == "Other" | Occupation == "Professional")
+
+hiding_occupation_plot_2 <- ggplot(aes(EmploymentStatus), data = detail_hiding_2) + geom_bar() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+hiding_occupation_plot_2
+```
+
+
+```{r}
+names(pLD)
+```
+```{r}
+payment <- pLD[c("BorrowerAPR", "LenderYield", "EstimatedEffectiveYield",
+                 "EstimatedLoss",
+                 "EstimatedReturn",
+                 "Term",
+                 "LoanOriginalAmount",
+                 "MonthlyLoanPayment",
+                 "LP_CustomerPayments",
+                 "LP_CustomerPrincipalPayments",
+                 "LP_InterestandFees",
+                 "LP_ServiceFees",
+                 "LoanOriginationDate",
+                 "LoanMonthsSinceOrigination", "LoanStatus",
+                 "ClosedDate", "ProsperRating..Alpha." )]
+subset(payment, LoanStatus == "Completed")
+pLD[c(924), 1:81]
+payment[1:5]
+levels(pLD$LoanStatus)
+```
+
+
+```{r}
+subset(payment, LoanStatus == "Completed")
+```
+
+
+```{r}
+# date comparing
+date <- pLD[c(65, 25, 3, 7, 5)]
+"LoanOriginationDate"    
+
+[25] "DateCreditPulled" 
+"ListingCreationDate"   
+"ClosedDate
+"Term" 
+date_12 <- subset(date, Term == "12")
+head(date_12)
+```
+
+
+```{r}
+#relationship between credit and terms 
+
+[69] "LP_CustomerPayments"                 "LP_CustomerPrincipalPayments"       
+[71] "LP_InterestandFees"                  "LP_ServiceFees"                     
+[73] "LP_CollectionFees"                   "LP_GrossPrincipalLoss"              
+[75] "LP_NetPrincipalLoss"           
+
+Credit_payment <- subset(pLD[c("LP_CustomerPayments", "MonthlyLoanPayment" , "Term", "LoanStatus")], LoanStatus != "Completed")
+Credit_payment <- transform(Credit_payment, Payment_month = LP_CustomerPayments/MonthlyLoanPayment)
+head(Credit_payment)
+
+#overdate payment
+subset(Credit_payment, Payment_month < Term & LoanStatus == "Defaulted")
+
+
+#any cost?
+subset(pLD, LP_CustomerPayments == 12688.13)
+```
+The term "delinquent" commonly refers to a situation where a borrower is late or overdue on a payment, such as income taxes, a mortgage, an automobile loan or a credit card account. 
+
+
+In finance, default is failure to meet the legal obligations (or conditions) of a loan,[1] for example when a home buyer fails to make a mortgage payment, or when a corporation or government fails to pay a bond which has reached maturity.
+Read more: Delinquent https://www.investopedia.com/terms/d/delinquent.asp#ixzz525ozTh15 
+Follow us: Investopedia on Facebook
+
+
+
+
+https://en.wikipedia.org/wiki/Default_(finance)
