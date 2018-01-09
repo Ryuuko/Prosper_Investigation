@@ -1,0 +1,156 @@
+你提交的项目中应包含哪些内容？
+
+
+RMD 文件，包含分析报告（最终图形和摘要以及反思）
+使用 knitr 包从 RMD 文件拼合而来的 HTML 文件
+原始数据集和数据源——如果你使用了自己的数据，而不是优达学城推荐的数据（注意：如果你使用的是优达学城推荐的数据集，则无需提交原始数据集）
+列出以下内容的列表：网站、书籍、论坛、博客文章、GitHub 版本库等你在创建提交的项目时参考或使用的资源（如果你未使用这类资源，请填写 N/A）
+
+
+
+https://en.wikipedia.org/wiki/Default_(finance)
+https://de.wikipedia.org/wiki/Delinquent
+https://stackoverflow.com/questions/1330989/rotating-and-spacing-axis-labels-in-ggplot2
+https://stackoverflow.com/questions/41338757/adding-percentage-labels-on-pie-chart-in-r
+https://stackoverflow.com/questions/35682703/display-percentage-values-on-a-pie-chart
+https://stackoverflow.com/questions/47752037/pie-chart-with-ggplot2-with-specific-order-and-percentage-annotations
+http://ggplot2.tidyverse.org/reference/scale_continuous.html
+http://ggplot2.tidyverse.org/reference/geom_histogram.html
+http://www.sthda.com/english/wiki/be-awesome-in-ggplot2-a-practical-guide-to-be-highly-effective-r-software-and-data-visualization#geom_freqpoly-frequency-polygon
+https://stackoverflow.com/questions/22600390/creating-density-plots-from-two-different-data-frames-using-ggplot2
+
+concept
+https://www.bankofamerica.com/mortgage/learn/apr-vs-interest-rate/
+it includes other charges or fees such as mortgage insurance, most closing costs, discount points and loan origination fees.
+
+
+
+https://www.collinsdictionary.com/dictionary/english/borrowing-rate
+https://www.orchardplatform.com/blog/2014519lender-yield-prosper/
+Lender Yield = Interest - the expected fee payments
+
+
+https://lendinghub.com.au/Info/CreditGrades.php
+
+https://www.businesswire.com/news/home/20110202005520/en/Prosper-Releases-Peer-to-Peer-Lending-Stats-December-Full-Year
+
+https://www.prosper.com/plp/general-prosper_score/
+
+
+https://www.prosper.com/invest
+
+
+http://www.businessdictionary.com/definition/sales-commission.html
+
+
+The money that investors earn is called yield.
+https://www.investopedia.com/terms/b/bond-yield.asp
+
+The current yield represents a bond’s annual return based on its annual coupon payments and current price
+https://www.investopedia.com/terms/e/effectiveyield.asp
+
+from the invester prespective 
+https://www.prosper.com/listings
+rating
+loan Category no
+amount
+
+
+
+However, what is less commonly noticed is the fact that Prosper has more than one credit rating.  In addition to its alphabetic grade, it also makes available the “Prosper Score”
+https://www.orchardplatform.com/blog/alphabetic-ratings-and-numeric-scores-on-prosper/
+
+
+https://www.prosper.com/plp/general-prosper_score/
+
+
+
+Number of inquiries on the credit bureau
+Number of delinquent accounts on the credit bureau
+Credit card utilization on the credit bureau
+Number of recently opened trades on the credit bureau
+Debt to income ratio
+Loan payment performance on prior Prosper loans
+
+
+# credit_score
+
+https://www.creditsesame.com/blog/credit/credit-score-range-for-experian-transunion-equifax/
+
+# Line of Credit
+
+The borrower can access funds from the line of credit at any time, as long as he does not exceed the maximum amount set in the agreement
+
+Read more: Line Of Credit (LOC) https://www.investopedia.com/terms/l/lineofcredit.asp#ixzz52ahrqcB6 
+Follow us: Investopedia on Facebook
+
+
+
+A revolving account is an account created by a lender to represent debts where the outstanding balance does not have to be paid in full every month by the borrower to the lender. 
+
+https://en.wikipedia.org/wiki/Revolving_account
+
+http://blog.credit.com/2013/04/how-a-revolving-credit-account-works-65670/
+
+# FICO, inquiries
+https://www.creditsesame.com/blog/credit/what-affects-your-credit-score/
+
+ Credit checks, known as inquiries, make up about 10 percent of the pie. When you apply for a credit card or attempt to borrow money, the lender performs a credit check.
+
+
+
+ http://rmarkdown.rstudio.com/authoring_pandoc_markdown.html#pandoc_markdown
+
+
+ # charge-off
+
+ A charge-off or chargeoff is the declaration by a creditor (usually a credit card account) that an amount of debt is unlikely to be collected.
+ https://en.wikipedia.org/wiki/Charge-off
+
+# defalut
+ In finance, default is failure to meet the legal obligations (or conditions) of a loan,[1] for example when a home buyer fails to make a mortgage payment, or when a corporation or government fails to pay a bond which has reached maturity.
+ https://en.wikipedia.org/wiki/Default_(finance)
+
+
+# differences
+ https://pocketsense.com/difference-between-chargeoff-default-13760.html
+
+
+ #percentage set
+
+ https://sebastiansauer.github.io/percentage_plot_ggplot2_V2/
+
+# range of credit
+consider factor
+ https://www.myfico.com/credit-education/whats-in-your-credit-score/
+
+# left align
+https://stackoverflow.com/questions/13294952/left-align-two-graph-edges-ggplot
+
+
+# ggsave
+http://ggplot2.tidyverse.org/reference/ggsave.html
+
+# sorting
+https://www.statmethods.net/management/sorting.html
+
+
+# term in 12, 24, 36....
+http://www.maxitrak.com/maxitrak-credit-terms
+
+
+http://www.freeeconhelp.com/2012/02/what-is-exogenous-variable.html
+
+Understanding Loan Statuses
+https://www.orchardplatform.com/blog/understanding-loan-statuses/
+
+
+
+
+Effectiv Yield
+https://en.wikipedia.org/wiki/Effective_interest_rate
+ annual percentage rate (APR) also in wiki
+
+
+Revovling account example
+ http://blog.credit.com/2013/04/how-a-revolving-credit-account-works-65670/
