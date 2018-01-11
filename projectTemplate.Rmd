@@ -28,8 +28,6 @@ getwd()
 pLD <- read.csv('prosperLoanData.csv')
 
 
-
-comparation <- subset(pLD[c(44, 81)])
 ```
 
 # Univariate Plots Section
@@ -41,7 +39,6 @@ As we can see, this is the dataset which includes more than 81 variables and it'
 * Employment Status Duration
 * Occupation
 * Home owner
-* Income Range
 * StatedMonthlyIncome
 * IncomeVerifiable
 
@@ -105,12 +102,27 @@ summary(blank_employment$LoanStatus)
 The interesting thing is that none of these credits is current credit or past due. They are completed, or fail to pay the credit in states of defaulted or charged-off, which are "ended" on some sense. This may not be a mere coincidence and later we can see that lots of our data come from current credit.
 
 ```{r}
+pLD <- transform(pLD, JobOwner = ifelse(EmploymentStatus == "Employed" | EmploymentStatus == "Full-time" | EmploymentStatus == "Part-time" | EmploymentStatus == "Self-employed", "True", "False"))
+```
+
+
+```{r}
 # EmploymentStatusDuration
 ggplot(aes(EmploymentStatusDuration), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 600), breaks = seq(0, 600, 30))
 ```
 It presents a very neat trend of the duration. The detail of the trend is that differences between groups of bin become smaller, as the duration goes up, so that we can observe the curve become flater around the left hand side of the graph.
 
 It is resonable since it may also imply age distribution:The younger you are, the shorter you've worked. Obviously, P2P borrowing is relatively a new concept comparing to the tradition finanical instruments, which should be recognized by more young poeple than elderly.
+
+In order to show the graph in a form of normal distribution, we can sub the x variable into the log function.
+```{r}
+ggplot(aes(EmploymentStatusDuration), data = pLD) + geom_histogram() +  scale_x_log10(
+   breaks = scales::trans_breaks("log10", function(x) 10^x),
+   labels = scales::trans_format("log10", scales::math_format(10^.x))
+ ) 
+```
+
+Although it shows us a normal distribution, but more data are lost during the prozess by removing more than 9100 rows of the dataset. But it remains me that even we don't use the method of log function, we still need to remove more than 7000 rows since there is the majority of "finite values".
 
 #Occupation
 ```{r}
@@ -157,7 +169,25 @@ It seems a reasonalbe distribution, because the most of distribution concentrate
 ggplot(aes(StatedMonthlyIncome), data = subset(pLD, !is.na(StatedMonthlyIncome))) + geom_histogram() + scale_x_continuous(limits = c(0, 40000)) + 
                 geom_freqpoly() 
 ```
-It has the simliar form of slightly Skewed distribution. But is the data of income reliable? We can limit the data set with the variable of IncomeVerifiable.
+It has the simliar form of slightly Skewed distribution, which needs the log function to become a normal distribution.
+
+```{r}
+
+ggplot(aes(StatedMonthlyIncome), data = subset(pLD, !is.na(StatedMonthlyIncome))) + geom_histogram() + scale_x_continuous(limits = c(0, 40000)) + 
+                geom_freqpoly() +
+   scale_x_log10(
+   breaks = scales::trans_breaks("log10", function(x) 10^x),
+   labels = scales::trans_format("log10", scales::math_format(10^.x))
+ ) 
+```
+
+```{r}
+summary(pLD$StatedMonthlyIncome)
+```
+
+As we can see most of income don't reach the magnitude of 10^4. As we can see in the summary, the mean of the data just reach 5608 or approximately 10^3.74.
+
+But is the data of income reliable? We can limit the data set with the variable of IncomeVerifiable.
 
 ```{r}
 # IncomeVerifiable?
@@ -270,14 +300,13 @@ That means we can have the whole picture of the data set via the credit score:
 
 ```{r}
 # sum up and take the average number of the score range to help building better view of scope
-pLD <- transform(pLD, average_score = (CreditScoreRangeLower + CreditScoreRangeUpper)/2)
+pLD <- transform(pLD, AverageScore = (CreditScoreRangeLower + CreditScoreRangeUpper)/2)
 
 
-ggplot(aes(average_score), data = pLD) + geom_histogram()
+ggplot(aes(AverageScore), data = pLD) + geom_histogram()
 
 #ignore the extreme low value of credit to have better view of the histogram
-
-ggplot(aes(average_score), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(350, 1000), breaks = seq(0, 1000, 125)) 
+ggplot(aes(AverageScore), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(350, 1000), breaks = seq(0, 1000, 125)) 
 
 ```
 
@@ -338,6 +367,9 @@ grid.arrange(LY, BR, BA, ncol = 1)
 
 Both of the extra fees, are in the most of the time "irregular" and depend on the the condition of investors and borrowers, so that we can see the form of three graphs have subtle differences on their distributions, but the trend of moving the bar towards the right hand side is still obvious, especially the "shift" happening on the graph of Borrower APR.
 
+In order to gain a greater overview upon the interest, we can also put variables of "Estimated Rate": Yield, Loss and Rate
+
+
 ```{r}
 ggplot(pLD, aes(x = LenderYield, y = ..count.., color = "Lender Yield")) + geom_freqpoly() +
   geom_freqpoly(aes(x = BorrowerRate, y = ..count.., color = "Borrower Rate")) +
@@ -391,12 +423,30 @@ Investors or lenders lend the money to the borrowers on the platform of Prosper.
 
 ```{r}
 ggplot(aes(Investors), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 600), breaks = seq(0, 600, 30)) + scale_y_continuous(limits = c(0, 15000))
-
 ```
 
 As we are having a univariable analyse, the changes of x axis/exogenous variable result in the y axis/endogenous variable. Here the endogenous variable shows how many credit there are. The graph shows us a negative correlation. When the number of investors goes up, the number of credit goes down at the same time.
 
+```{r}
+ggplot(aes(Investors), data = pLD) + geom_histogram() + scale_x_log10(
+   breaks = scales::trans_breaks("log10", function(x) 10^x),
+   labels = scales::trans_format("log10", scales::math_format(10^.x))
+ ) 
 
+```
+Interesting thing happens: Fristly, around the range from 10^0.5 to 10^3, we have a normal distribution with high variance, so that the distribution looks flater. Secondly, the majority of investors just reach the magnitude of 10^0, which means 1! 
+```{r}
+summary(pLD$Investors)
+```
+As the summary shows, th mean is near to the level of 10^2, which forms the "pike" in the form of normal distribution. 
+
+The minimum number of the dataset is only 1 and its first quarter is just 2. It is because there are lots of small amount of investors in the dataset.
+
+```{r}
+nrow(subset(pLD, Investors == "1"))/nrow(pLD)
+```
+
+Almost a quarter of loan credit only get 1 investor.
 
 # after the launch of Credit
 
@@ -409,12 +459,16 @@ But it has its limitation and the borrowers should pay the principal and interes
 I have not heard of this term before, but to my own opinion, it creates an account to help the borrowers delay their payment. It is a interesting payment strategy to avoid damage the reputation or the creidt grade of the borrower without paying on time.
 
 ```{r}
-ggplot(aes(OpenRevolvingMonthlyPayment), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 2000), breaks = seq(0, 2000, 100))
+ggplot(aes(OpenRevolvingMonthlyPayment), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 2000), breaks = seq(0, 2000, 100)) + scale_x_log10(
+   breaks = scales::trans_breaks("log10", function(x) 10^x),
+   labels = scales::trans_format("log10", scales::math_format(10^.x))
+ ) 
 
 summary(pLD$OpenRevolvingMonthlyPayment)
 ```
 
-Just like the graph of investors, this graph shows us a negative correlation between the number of revolving payment and the number of credit borrowed. People seem not to afford another extra credit in order to keep their record. So do most of them pay the credit on time? Let's see the distribution of Loan Status.
+People seem only afford small amount of credit around 100 to 1000 in order to keep their record. So do most of them pay the credit on time? Let's see the distribution of Loan Status.
+
 
 * Loan Status
 
@@ -480,13 +534,6 @@ One way to explain this phenomenon : we better see the label of loan status issu
 
 The "Current" status with non-zero amount of delinquency can be explained as well. Since the status is just a label issued by Prosper right on the date the origination of the data set. Besides the status of "Complete", many other labals can be moved to other category as well. A Past-Due borrower may have the hope to move back to the "Current" status when he pay his money back on time again. But how does it happen? We may have no idea at all.
 
-Other observations:
-
-* Borrowers seem to reveal their own informations in the more ambigous way
-
-* Borrowers prefer to pay the loan in term of 36 / in three years.
-
-* The majority of the loan in the dataset is in the current status
 
 ```
 
@@ -501,6 +548,14 @@ There are 113,937 credit loans in the dataset 81 features, most of the features 
 *Credit charactoristic
 *After the launch of Credit
 
+Other observations:
+
+* Borrowers seem to reveal their own informations in the more ambigous way
+
+* Borrowers prefer to pay the loan in term of 36 / in three years.
+
+* The majority of the loan in the dataset is in the current status
+
 
 ### What is/are the main feature(s) of interest in your dataset?
 
@@ -511,28 +566,72 @@ There are actually so many ways to predictive models because of the huge amount 
 
 Since we want to predict the consideration of investors, first of all we need to know what kinds of elements the investors will notice.
 
-As the website of Prosper shows, there are some variable from our dataset can be found in the informations provided to the investors in the first time:
+As the website of Prosper shows, there are some variable from our dataset can be found in the informations provided to the investors in the first place:
 
-Terms
-Rating - Prosper Rating
-Amount - Loan originated Amount
-estimated effective Yield 
-effective loss
+*Terms
+*Credit Grade
+*Loan originated Amount
+*Lender Yield
 
+
+I give up including variables of estimated effective Yield and estimated effective loss, althogh this is the first impression provided to the lender as well. Firstly, I don't understand the differences between estimated effective Yield and estimated effective Return. Sometimes they have the same rate, sometimes estimated effective Yield is equal to the sum of estimated loss and return. Secondly, there is no way to figure out which one is the term used by Prosper as "estimated effective Yield" in its website. Thirdly, lots of completed credit have lost the record of estimated Yield.
+
+Lender Yield, as we have analyzed before, performs the similar distrubation like Borrower Rate and Borrower APR and always appear to be non-NaN value which allows us to analyse the dataset without excluding too many data. We should be aware of the same situation happening in using Prosper Rating.
+
+```{r}
+nrow(subset(pLD, !is.na(pLD$ProsperRating..numeric.)))
+```
+
+
+Other factors revealed in Prosper like 
+
+* the percentage of funded 
+* deadline of funding 
+* reasons of borrowing
+
+are not avaliable in our dataset.
 
 ### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
 
-how much they earn?
+Variables from the group of "About reliability of borrowers" affect the the grading system, which generates the Prosper Rating to remind investors the level of risk. https://www.prosper.com/plp/invest/prosper-ratings/
 
+
+* Stated Monthly Income
+* Employment Status 
+
+Moreover, it will be interesting to compare the predictive performance of Credit Score Range with the Prosper Rating, since it be the factor which manipulate factors like Estimated Loss. Also it covers all the grading in the dataset and displays a complete picture of the dataset.
 
 ### Did you create any new variables from existing variables in the dataset?
+
+Yes, I create a new variable named "AverageScore" and "JobOwner"
+
+The first one presents the variety of score range in a way of continuous data, which should be more convienient for us to analyze.
+
+The second helps us to simply distinguish the whether the borrower is a job owner.
+
 
 ### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
 
 
 
+Yes. Some data need to be rescaled for a normal distribution, like the graph of Investors and monetary data like Stated Monthly Income, Loan Original Amount and Open Revolving MonthlyPayment.
+
+The distribution of the variable of investors is strange, even after the transformation of scale, because lots of loan only have one lender or investor.
+
+Some labels of the variable need to be re-factorized, like Income Range, since there are orders between different income ranges.
+
+
+
 # Bivariate Plots Section
+
 ```{r echo=FALSE, Bivariate_Plots}
+
+#form the new dataset
+
+simplied_pLD <- pLD[c("Terms", "LoanoriginatedAmount", "LenderYield", "CreditGrade", "ProsperRating..Alpha.", "StatedMonthlyIncome", "JobOwner", "Investors", "AverageScore")]
+
+
+
 
 
 
@@ -689,8 +788,7 @@ The term "delinquent" commonly refers to a situation where a borrower is late or
 
 
 In finance, default is failure to meet the legal obligations (or conditions) of a loan,[1] for example when a home buyer fails to make a mortgage payment, or when a corporation or government fails to pay a bond which has reached maturity.
-Read more: Delinquent https://www.investopedia.com/terms/d/delinquent.asp#ixzz525ozTh15 
-Follow us: Investopedia on Facebook
+
 
 
 
