@@ -154,3 +154,40 @@ https://en.wikipedia.org/wiki/Effective_interest_rate
 
 Revovling account example
  http://blog.credit.com/2013/04/how-a-revolving-credit-account-works-65670/
+
+180 past due
+https://www.thebalance.com/deal-with-past-due-accounts-961128
+
+
+scale the log
+https://rstudio-pubs-static.s3.amazonaws.com/59196_30f45c3acd6d4036a9506f5d83170d44.html
+
+deal with magnitutde in the monetary: using log
+ https://www.r-statistics.com/2013/05/log-transformations-for-skewed-and-wide-distributions-from-practical-data-science-with-r/
+
+
+
+ scale_x_log10(
+   breaks = scales::trans_breaks("log10", function(x) 10^x),
+   labels = scales::trans_format("log10", scales::math_format(10^.x))
+ ) 
+
+
+
+
+* Terms
+* Prosper Rating
+* Loan originated Amount
+* Lender Yield
+* Stated Monthly Income
+* Employment Status
+* Investor
+* Credit Score Range
+
+consider normal distribution
+https://en.wikipedia.org/wiki/Normal_distribution
+
+
+ifelse function
+https://stackoverflow.com/questions/17252288/using-ifelse-in-r
+https://www.programiz.com/r-programming/ifelse-function
