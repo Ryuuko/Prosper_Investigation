@@ -191,3 +191,42 @@ https://en.wikipedia.org/wiki/Normal_distribution
 ifelse function
 https://stackoverflow.com/questions/17252288/using-ifelse-in-r
 https://www.programiz.com/r-programming/ifelse-function
+
+
+---two variables
+
+smooth the line with linear regression
+http://ggplot2.tidyverse.org/reference/geom_smooth.html
+
+correlation between two variables
+https://www.statmethods.net/stats/correlations.html
+
+
+http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-correlation-matrix-using-r-software
+
+
+Limit ggplot2 axes without removing data (outside limits): zoom
+
+
+https://stackoverflow.com/questions/25685185/limit-ggplot2-axes-without-removing-data-outside-limits-zoom
+
+themes
+http://ggplot2.tidyverse.org/reference/ggtheme.html
+
+
+
+Loan Original Amount.
+LenderYield
+LenderYield, EstimatedLoss
+
+ProsperRating..Alpha/numeric
+
+Prosper Score.
+AverageScore
+AverageScore-credit Grade
+
+
+
+
+beautified
+http://lehoangvan.com/posts/dual-y-axis-ggplot2/
