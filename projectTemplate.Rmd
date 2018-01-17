@@ -11,6 +11,7 @@ TITLE by YOUR_NAME_HERE
 
 library(ggplot2)
 library(dplyr)
+
 ```
 ```{r echo=FALSE, Univariate_Plots}
 names(pLD)
@@ -24,7 +25,7 @@ str(pLD)
 ```
 ```{r echo=FALSE, Load_the_Data}
 # Load the Data
-getwd()
+setwd("C:/Users/apple/Desktop/P4")
 pLD <- read.csv('prosperLoanData.csv')
 
 
@@ -185,7 +186,7 @@ ggplot(aes(StatedMonthlyIncome), data = subset(pLD, !is.na(StatedMonthlyIncome))
 summary(pLD$StatedMonthlyIncome)
 ```
 
-As we can see most of income don't reach the magnitude of 10^4. As we can see in the summary, the mean of the data just reach 5608 or approximately 10^3.74.
+As we can see most of income don't reach the magnitude of 10^4. As we can see in the summary, the mean of the data just reach 5608 or approximately 10^(3.74).
 
 But is the data of income reliable? We can limit the data set with the variable of IncomeVerifiable.
 
@@ -332,6 +333,7 @@ Actually these three variables describe the same thing on three different angles
 
 The differences between Lender Yield and Borrower Rate is "a servicing fee charged by the originator to the investor each time a payment is made".
 https://www.orchardplatform.com/blog/2014519lender-yield-prosper/(it seems that it is using the same Prosper Dataset as well)
+
 The "orignator" here is Prosper.
 
 Moreover, the borrowers need to pay the extra fee the orignator/Prosper. That is the differences between Borrower APR and Borrower Rate. The first one include "other charges or fees such as mortgage insurance, most closing costs, discount points and loan origination fees."
@@ -405,6 +407,8 @@ As we can see, borrowers raise their request with the simple whole numbers. It i
 There are three types of term in the dataset: 12, 36, 60. The number actually represents the payment duration options provided by Prosper: in how many months a borrower need to pay back the credit or so-called a monthly loan payment. 
 
 ```{r}
+library(dplyr)
+
 ggplot(aes(Term), data = pLD) + geom_bar() + scale_x_continuous(breaks = c(12, 36, 60))
 
 Terms_labels <- pLD %>%
@@ -628,24 +632,312 @@ Some labels of the variable need to be re-factorized, like Income Range, since t
 
 #form the new dataset
 
-simplied_pLD <- pLD[c("Terms", "LoanoriginatedAmount", "LenderYield", "CreditGrade", "ProsperRating..Alpha.", "StatedMonthlyIncome", "JobOwner", "Investors", "AverageScore")]
 
+pLD <- transform(pLD, AverageScore = (CreditScoreRangeLower + CreditScoreRangeUpper)/2)
 
+pLD <- transform(pLD, JobOwner = ifelse(EmploymentStatus == "Employed" | EmploymentStatus == "Full-time" | EmploymentStatus == "Part-time" | EmploymentStatus == "Self-employed", "True", "False"))
 
+simplified_pLD <- pLD[c("Term", "LoanOriginalAmount", "LenderYield", "ProsperRating..numeric.", "ProsperRating..Alpha.", "ProsperScore", "StatedMonthlyIncome", "AverageScore", "JobOwner", "Investors")]
 
 
 
 ```
 
+Matrix scatterplot
+```{r}
+
+```{r}
+#exclude the data without filled Prosper Rating
+simplified_pLD <- subset(simplified_pLD, ProsperRating..Alpha. != "") 
+
+
+library(ggplot2)
+library(GGally)
+library(scales)
+library(memisc)
+
+ggpairs(simplified_pLD, 
+        lower = list(continuous = wrap("points", shape = I('.'))),
+        upper = list(combo = 
+                       wrap("box", outlier.shape = I('.'))))
+                       
+                
+```
+
+```{r}
+simplified_pLD_numeric <- pLD[c("Term", "LoanOriginalAmount", "LenderYield", "ProsperRating..numeric.", "ProsperScore", "StatedMonthlyIncome", "AverageScore", "Investors")]
+
+cor(simplified_pLD_numeric, use = "complete.obs")
+```
+
+
+
+From the scatterplot we can observe that it seems the distributions of Terms and Job Owner don't change a lot from their uni-variables form. So I decide not to examine them in detail in this section.
+
+Let's start with the one with the highest correlation with the variable of Investors: Loan Original Amount.
+
+
+
+```{r}
+ggplot(aes(x = LoanOriginalAmount, y = Investors), data = simplified_pLD) + geom_point()
+```
+
+As we have seen before, borrowers prefer borrowing loans with simple whole number, so than we can see some horizontal straight lines formed by the point. Therefore, we should add some jitters. Also, we need to increase the degree of transprancy to avoid the black cluster on the left hand side of the graph.
+
+```{r}
+ggplot(aes(x = LoanOriginalAmount, y = Investors), data = simplified_pLD) + geom_point(alpha = 0.05,
+             position = position_jitter(w = 500, h = 20)) + scale_x_continuous(limits = c(0, 40000), breaks = seq(0, 40000, 2500)) +
+  geom_smooth(method = "lm", se = FALSE) 
+```
+
+Even we turn down alpha of the scatterplot and add some jitter points to the graph, the consistency of the horizontal lines like 10000 and 15000 is quite visible. But we should notice as well: 
+there is a trend that larger amount of loan needs more investors, as the regression line has suggested. By comparing the graph of univariable graph, we know that actually there more small numbers of loan in the dataset, so the distribution of this two variables graph is not caused by the number of loan.
+
+In our case study, it may mean that our invetors prefer investing relative small amount of money and wait for the other investors rather than throwing lots of money to fullfil the amount requirement in small group of people.
+
+
+Interesting thing is: the trend seems to stop after the amount of 25000. 
+
+```{r}
+ggplot(aes(x = LenderYield, y = Investors), data = simplified_pLD) + geom_point()
+```
+
+Again, we need the help of jitter and alpha.
+
+```{r}
+ggplot(aes(x = LenderYield, y = Investors), data = simplified_pLD) + geom_point(alpha = 0.05,
+             position = position_jitter(h = 25)) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+Athough there is a small correlation (-0.27) between Investors and Lender Yield, lower rate around 0.1 is obviously more popular than 0.3. But why are there fewer investors who are willing to invest for more return?
+
+I think one reason of this is because the return is highly correlated with the risk. There is very high positive correlation between the lender yield and the estimated loss:
+
+```{r}
+ggplot(aes(x = LenderYield, y = EstimatedLoss), data = pLD) + geom_point()
+with(subset(pLD, !is.na(pLD$EstimatedLoss)), cor(LenderYield, EstimatedLoss))
+```
+
+
+```{r}
+fill <- "#4271AE"
+line <- "#1F3552"
+
+ggplot(aes(x = ProsperRating..Alpha., y = Investors), data = subset(simplified_pLD, ProsperRating..Alpha. != "")) +
+        geom_boxplot(fill = fill, colour = line)
+```
+fill and line reference: http://t-redactyl.io/blog/2016/04/creating-plots-in-r-using-ggplot2-part-10-boxplots.html
+
+
+
+It seems that except with the grade of AA, which is the highest rating, there is no better popularity of investment for the borrowers with higher grade. Most of the boxes just stay at the similar level. But it is mostly because of the outliners. Let we focus the most of the distribution of our data.
+
+```{r}
+ggplot(aes(x = ProsperRating..Alpha., y = Investors), data = subset(simplified_pLD, ProsperRating..Alpha. != "")) +
+        geom_boxplot(fill = fill, colour = line) + coord_cartesian(ylim=c(0, 300))
+```
+
+In general, we can say that better grade can bring more investors, especially from the grade of C to the AA. 
+
+Althoguh the Alpha Rating is not numeric and we can not do correlation calculation with it, the dataset prepare the numeric grading for us, whose "1" represents the worst grade "HR" and "7" the best grade "AA" .
+
+```{r}
+with(simplified_pLD, cor(Investors,  ProsperRating..numeric., use = "complete.obs"))
+```
+
+But as the correlation number shows, 0.3 is just a bit better than a weak correlation. In the graph, we can see there are some outliners from very bad grade, which attracts huge amount of investors. And the mean number of investors for Grade C is even lower than worse grade.
+
+There is another grading system from Prosper - Prosper Score.
+
+https://www.prosper.com/plp/general-prosper_score/
+
+By reading the explaination from Prosper again, we know the credit score should be so-called "credit bureau score" or "credit reporting agency score". Prosper states that the Prosper Score is specifically "A custom risk score was built using historical Prosper data to assess the risk of Prosper borrower listings. The output to Prosper users is a Prosper score which ranges from 1 to 11, with 11 being the best, or lowest risk, score." In short, it performs a larger spectrum of rating for clearer examination.
+
+The rating grade is certainly presented on the website of Prosper. But will the investor have chance to view the more precise version of score? Very likely and there is strong correlation between these two varibles.
+
+```{r}
+#back to the full dataset to analyze the correlation in unfactorized way
+with(pLD, cor(ProsperScore,  ProsperRating..numeric., use = "complete.obs"))
+```
+
+```{r}
+
+simplified_pLD$ProsperScore <- factor(simplified_pLD$ProsperScore,
+                          levels = c(1:11))
+
+ggplot(aes(x = ProsperScore , y = Investors), data = simplified_pLD ) + geom_bar(stat = 'summary', fun.y = mean)
+
+```
+```{r}
+# come back to the full dataset to use correlaion function since the Prosper Score has been factorized
+with(pLD, cor(ProsperScore, Investors, use = "complete.obs"))
+
+```
+
+It performs a little bit better than the traditional grading, but two variables don't act like we expect. The worst grade "1" and the best grade "11" don't attract the smallest and the largest amount of investors.
+
+The document also talk about the advantage of Prosper Score:
+
+"Unlike a credit bureau score, which is based on a much wider variety of loan performance, the Prosper score is specifically built on the Prosper borrower and applicant population. As such, the credit reporting agency score should, and does, rank order risk on the Prosper population, but is not as discriminating as the custom score." 
+
+Although we have no idea where the data of credit score range come from, it is very likely the so-called "credit bureau score" or "credit reporting agency score" since every borrowers gets their credit score in the two variables of credit score range, which is already transformed into the one variable "AverageScore". So how do it performs in predicting the number of investors?
+
+```{r}
+ggplot(aes(x = AverageScore , y = Investors), data = simplified_pLD) + geom_histogram(stat = 'summary', fun.y = mean)
+```
+
+```{r}
+with(simplified_pLD, cor(Investors, AverageScore, use = "complete.obs"))
+```
+
+Starting from the average score of 700, the correlation between average score and Investors is very obvious. And it performs even better than the conventional 1-to-7-Rating. But why is the lowest score just about 600? Let's come back to our full dataset:
+
+```{r}
+ggplot(aes(x = AverageScore , y = Investors), data = pLD) + geom_histogram(stat = 'summary', fun.y = mean)
+
+
+with(pLD, cor(Investors, AverageScore, use = "complete.obs"))
+```
+It performs now below the standard of "good" correlation, i.e. 0.3. As we see in the graph, some borrowers with very low score can still win some investors.
+
+The very low scores are excluded after I filter the full dataset where the Propser conventional Rating is missing, that means, only the one whose credit range is approximately over the level of 600 can carn a prosper score. Otherwise, the value of Prosper's conventional rating will be blank.
+
+It also means that, A HR borrower may be someone who actually earns a average score more than 600. It is very strange. Let's say the most famous credit score -- FICO score, whose ranges from 300 and 850, the level of 600 is actually just a bit worse than having a good credit history.
+https://www.investopedia.com/terms/f/ficoscore.asp
+
+```{r}
+head(subset(pLD, AverageScore < 600)["CreditGrade"])
+```
+
+Some of data which is lower than the level of 600 have Credit Grade. Again, we don't know where does this grade come from. When is it shown? Before the origination of loan? After the origination? Or never and is it just internal record in Prosper's database? 
+
+If it is not shown in front of the investors, how come there is still a correlation between Average Score and number of investors? I think the best explaination is that there is also a relationship between the Prosper Rating (traditional or Prosper Score) and Average Score.
+
+```{r}
+with(pLD, cor(ProsperRating..numeric., AverageScore, use = "complete.obs"))
+with(pLD, cor(ProsperScore, AverageScore, use = "complete.obs"))
+```
+
+
+The connection between the Average Score and Prosper Rating is stronger than between the Average Score and Prosper Score. Maybe the history of the rating development should be like this:
+
+Credit Grade/Credit Score (from bureau?) --> Prosper conventional rating --> Prosper Score
+
+Since we can sure the last two will be shown in the investors' pages, we should include them if we want to investigate the predictive factor of investors. 
+
+Let's back to the focus on investors. How is the relationship between the Income and number of  Investors?
+
+```{r}
+ggplot(aes(x = StatedMonthlyIncome, y = Investors), data = simplified_pLD) + geom_point()
+```
+
+There are some super rich people who produce huge outliners on the scatterplot. Let's zoom in a bit:
+
+```{r}
+ggplot(aes(x = StatedMonthlyIncome, y = Investors), data = subset(simplified_pLD)) + geom_point(alpha = 0.05,
+             position = position_jitter(w = 500, h = 20)) + coord_cartesian(xlim=c(0, 75000))
+
+
+```
+
+It reminds me the form we have seen in the uni-variable analyze, whose peak appear in the left hand side. We need to add the data into the log10 function again: 
+
+```{r}
+ggplot(aes(x = StatedMonthlyIncome, y = Investors), data = subset(simplified_pLD, StatedMonthlyIncome != 0)) + geom_point(alpha = 0.05) +  scale_x_log10(
+   breaks = scales::trans_breaks("log10", function(x) 10^x),
+   labels = scales::trans_format("log10", scales::math_format(10^.x))
+ )  
+
+```
+
+Again, the distribution concentrate around 10^4 like the uni-variable. I think it is just because most of borrowers earn the intermediate income, so most of investors have more chances to invest them. In fact, there are almost no correlation between these two factors.  
+
+```{r}
+with(subset(pLD, IncomeVerifiable == "True"), cor(StatedMonthlyIncome, Investors))
+```
+
+In fact, there are almost no correlation between these two factors. 
+
+But what is correlation betwwen income and socre? How much do I earn should be related to the score, which affects the investors? In order to have a fair analyse, I add the constraint of "verified income" in the subset in calculating the correlation:
+
+```{r}
+with(subset(pLD, IncomeVerifiable == "True"), cor(StatedMonthlyIncome, AverageScore, use = "complete.obs"))
+
+with(subset(pLD, IncomeVerifiable == "True"), cor(StatedMonthlyIncome,ProsperRating..numeric., use = "complete.obs"))
+
+with(subset(pLD, IncomeVerifiable == "True"), cor(StatedMonthlyIncome,ProsperScore, use = "complete.obs"))
+
+```
+None of our grading systme seem to have relationship with Income.
+
+
+```{r}
+ggplot(aes(x = StatedMonthlyIncome, y = AverageScore), data = subset(pLD, StatedMonthlyIncome != 0 & IncomeVerifiable == "True")) + geom_point(alpha = 0.05, position = position_jitter(h = 20)) +  scale_x_log10(
+   breaks = scales::trans_breaks("log10", function(x) 10^x),
+   labels = scales::trans_format("log10", scales::math_format(10^.x))
+ )  
+
+```
+
+
+Reading the document on Prosper again, Key variables of Prosper Score in the scorecard are:
+
+Number of inquiries on the credit bureau
+Number of delinquent accounts on the credit bureau
+Credit card utilization on the credit bureau
+Number of recently opened trades on the credit bureau
+Debt to income ratio
+Loan payment performance on prior Prosper loans
+
+Although many similiar factors like "previous credit" are included in our dataset, lots of them are just 0 and lack of variety.
+
+It reminds me that we have the variable of "Debt To IncomeRatio". Maybe it can be a better statement since it considers the factor of the proportion between income and loan.
+
+```{r}
+with(subset(pLD, IncomeVerifiable == "True"), cor(DebtToIncomeRatio, Investors, use = "complete.obs"))
+
+with(subset(pLD, IncomeVerifiable == "True"), cor(DebtToIncomeRatio, ProsperScore, use = "complete.obs"))
+```
+
+It does not perform better. 
+
+It is against my intuition: when we borrow money to the others, we will examine if the borrowers have the ability to pay the money back. 
+
+Then what is the factor which affect the score the most? Then I come back to the matrix of correlation and find the strongest correlation with the score:
+
+```{r}
+with(simplified_pLD, cor(LenderYield, ProsperScore, use = "complete.obs"))
+```
+
+```{r}
+ggplot(aes(x = ProsperRating..numeric., y = LenderYield), data = simplified_pLD) + geom_bar(stat="summary", fun.y=mean) 
+```
+
+It prefectly related to........how much can the invesotrs earn?
+
+It should be better to say: the score affects the yield, since people with bad socre should pay more interest. According to the theory in Economics, people with bad credit socre are likely no able to pay back in the future, so they need to pay more to balance the risk and uncertainty in the future. 
+
 # Bivariate Analysis
 
 ### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
 
+There are a correlation between the investors and loan original amount, even though the amount number just sticks to a particular number and therefore lacks of variety. It is understandable because large amount of loan needs more people to fill the requirement. It may show that investors want to avoid risk rather than throwing more investments and expecting better returns.
+
+The correlation between investors and lender yield is weak (-0.24232616). The negative correlation indicate that when the lender yield goes up, the number of investors will move down. I think the reason is that higher return also means higher risk as well.
+
+
 ### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+The relationship between the score system, whatever it is from the rating system in Prosper or the "bureau score", and the level of income is almost equal to zero. It doesn't make sense to me because how much borrowers can borrow should be proportional to how much borrowers earn.
 
 ### What was the strongest relationship you found?
 
 
+The relationship between lender yield and Propser conventional rating is very strong, almost reaching the maximum level of correlation. Because the lender yield refers the credit score, since the credit indicates how trustful the borrowers are. If they are more untrustful, then they need to pay more transaction costs.
+
+But again, the question "what affects the score the most?" has not been answered. Assuming the score system is reasonable and it reveals the information the lenders need to know, other factors like the past record determine more and subtle changes like past-due once will make a huge difference in the score or rating.
+
+Since this exploration is focusing the relationship between investors, we will go back to analyzing the main theme in the next section.
 
 
 # Multivariate Plots Section
@@ -654,9 +946,24 @@ simplied_pLD <- pLD[c("Terms", "LoanoriginatedAmount", "LenderYield", "CreditGra
 
 ```
 
+
+```{r Building the Linear Model}
+m1 <- lm(I(log(price)) ~ I(carat^(1/3)), data = diamonds)
+m2 <- update(m1, ~ . + carat)
+m3 <- update(m2, ~ . + cut)
+m4 <- update(m3, ~ . + color)
+m5 <- update(m4, ~ . + clarity)
+mtable(m1, m2, m3, m4, m5)
+names(diamondsbig)
+```
+
+
 # Multivariate Analysis
 
 ### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+
+
 
 ### Were there any interesting or surprising interactions between features?
 
