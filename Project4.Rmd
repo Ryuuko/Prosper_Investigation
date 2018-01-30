@@ -704,7 +704,7 @@ simplified_pLD <- pLD[c("Term", "LoanOriginalAmount", "LenderYield",
 
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=15, fig.height=15}
 #exclude the data without filled Prosper Rating
 simplified_pLD <- subset(simplified_pLD, ProsperRating..Alpha. != "") 
 
@@ -713,7 +713,7 @@ ggpairs(simplified_pLD,
         upper = list(combo = 
                        wrap("box", outlier.shape = I('.'))))
                        
-                
+
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
