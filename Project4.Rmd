@@ -110,7 +110,9 @@ pLD <- transform(pLD, JobOwner = ifelse(EmploymentStatus == "Employed" |
                                         "True", "False"))
 
 # EmploymentStatusDuration
-ggplot(aes(EmploymentStatusDuration), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 600), breaks = seq(0, 600, 30))
+ggplot(aes(EmploymentStatusDuration), data = pLD) + 
+  geom_histogram() + scale_x_continuous(limits = c(0, 600), 
+                                        breaks = seq(0, 600, 30))
 ```
 
 It presents a very neat trend of the duration. The detail of the trend is that differences between groups of bins become smaller, as the duration goes up, so that we can observe the curve becomes flatter around the left hand side of the graph.
@@ -189,7 +191,8 @@ It has the similar form of slightly Skewed distribution, which needs the log fun
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 ggplot(aes(StatedMonthlyIncome), 
-       data = subset(pLD, !is.na(StatedMonthlyIncome))) + geom_histogram() + scale_x_continuous(limits = c(0, 40000)) + 
+       data = subset(pLD, !is.na(StatedMonthlyIncome))) + 
+  geom_histogram() + scale_x_continuous(limits = c(0, 40000)) + 
                 geom_freqpoly() +
    scale_x_log10(
    breaks = scales::trans_breaks("log10", function(x) 10^x),
@@ -215,7 +218,9 @@ ggplot(aes(IncomeRange), data = subset(pLD, IncomeVerifiable == "True")) +
 
 ggplot(aes(x = StatedMonthlyIncome), data = pLD) + 
   geom_freqpoly(color = "yellow") + scale_x_continuous(limits = c(0, 40000)) + 
-  geom_freqpoly(data = subset(pLD, IncomeVerifiable == "True"), aes(color = StatedMonthlyIncome), color = "orange") + theme_minimal()
+  geom_freqpoly(data = subset(pLD, IncomeVerifiable == "True"), 
+                aes(color = StatedMonthlyIncome), color = "orange") + 
+  theme_minimal()
 
 ```
 
@@ -415,7 +420,8 @@ Next question is: how much have the borrowers borrowed?
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
-ggplot(aes(LoanOriginalAmount), data = pLD) + geom_histogram(bins= 100) + scale_x_continuous(limits = c(0, 40000), breaks = seq(0, 40000, 2500))
+ggplot(aes(LoanOriginalAmount), data = pLD) + geom_histogram(bins= 100) + 
+  scale_x_continuous(limits = c(0, 40000), breaks = seq(0, 40000, 2500))
 
 ```
 
@@ -501,7 +507,8 @@ But it has its limitation and the borrowers should pay the principal and interes
 I have not heard of this term before, but to my own opinion, it creates an account to help the borrowers to delay their payment. It is an interesting payment strategy to avoid damaging the reputation or the credit grade of the borrower without paying on time.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-ggplot(aes(OpenRevolvingMonthlyPayment), data = pLD) + geom_histogram() + scale_x_continuous(limits = c(0, 2000), breaks = seq(0, 2000, 100)) + 
+ggplot(aes(OpenRevolvingMonthlyPayment), data = pLD) + geom_histogram() + 
+  scale_x_continuous(limits = c(0, 2000), breaks = seq(0, 2000, 100)) + 
   scale_x_log10(
    breaks = scales::trans_breaks("log10", function(x) 10^x),
    labels = scales::trans_format("log10", scales::math_format(10^.x))
@@ -686,7 +693,9 @@ pLD <- transform(pLD, JobOwner = ifelse(EmploymentStatus == "Employed" |
                                           EmploymentStatus == "Self-employed", 
                                         "True", "False"))
 
-simplified_pLD <- pLD[c("Term", "LoanOriginalAmount", "LenderYield", "ProsperRating..numeric.", "ProsperRating..Alpha.", "ProsperScore", 
+simplified_pLD <- pLD[c("Term", "LoanOriginalAmount", "LenderYield", 
+                        "ProsperRating..numeric.", "ProsperRating..Alpha.", 
+                        "ProsperScore", 
                         "StatedMonthlyIncome", "AverageScore", "JobOwner", 
                         "Investors")]
 
@@ -890,7 +899,9 @@ ggplot(aes(x = StatedMonthlyIncome, y = Investors), data =
 It reminds me that the form we have seen in the uni-variable analyze, whose peak appears in the left hand side. We need to add the data into the log10 function again: 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-ggplot(aes(x = StatedMonthlyIncome, y = Investors), data = subset(simplified_pLD, StatedMonthlyIncome != 0)) + geom_point(alpha = 0.05) +  scale_x_log10(
+ggplot(aes(x = StatedMonthlyIncome, y = Investors), data = 
+         subset(simplified_pLD, StatedMonthlyIncome != 0)) + 
+  geom_point(alpha = 0.05) +  scale_x_log10(
    breaks = scales::trans_breaks("log10", function(x) 10^x),
    labels = scales::trans_format("log10", scales::math_format(10^.x))
  )  
@@ -908,7 +919,8 @@ But how is correlation between Monthly Income and score? How much do I earn shou
 Correlation with Prosper Conventional Rating:
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-with(subset(pLD, IncomeVerifiable == "True"), cor(StatedMonthlyIncome,ProsperRating..numeric., use = "complete.obs"))
+with(subset(pLD, IncomeVerifiable == "True"), 
+     cor(StatedMonthlyIncome,ProsperRating..numeric., use = "complete.obs"))
 ```
 
 Correlation with Prosper Score:
@@ -930,7 +942,8 @@ None of our grading systems seem to have the relationship with Monthly Income.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
-ggplot(aes(x = StatedMonthlyIncome, y = AverageScore), data = subset(pLD, StatedMonthlyIncome != 0 & IncomeVerifiable == "True")) + 
+ggplot(aes(x = StatedMonthlyIncome, y = AverageScore), data = 
+         subset(pLD, StatedMonthlyIncome != 0 & IncomeVerifiable == "True")) + 
   geom_point(alpha = 0.05, position = position_jitter(h = 20)) +  scale_x_log10(
    breaks = scales::trans_breaks("log10", function(x) 10^x),
    labels = scales::trans_format("log10", scales::math_format(10^.x))
@@ -961,7 +974,8 @@ with(subset(pLD, IncomeVerifiable == "True"), cor(DebtToIncomeRatio, Investors,
 Correlation with Prosper Score:
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-with(subset(pLD, IncomeVerifiable == "True"), cor(DebtToIncomeRatio, ProsperScore, 
+with(subset(pLD, IncomeVerifiable == "True"), cor(DebtToIncomeRatio, 
+                                                  ProsperScore, 
                                                   use = "complete.obs"))
 ```
 
@@ -1046,7 +1060,8 @@ Thirdly, it is interesting that AA-grade borrowers are not "active" to borrow lo
 ggthemr_reset()
 
 ggplot(aes(x = LoanOriginalAmount, y = Investors, color = ProsperScore), 
-       data = subset(pLD, ProsperRating..Alpha.!= "")) + geom_point(position = position_jitter(w = 500, h = 20)) + 
+       data = subset(pLD, ProsperRating..Alpha.!= "")) + 
+  geom_point(position = position_jitter(w = 500, h = 20)) + 
   scale_colour_gradient(low = "white", high = "blue")
 
 ```
@@ -1068,7 +1083,9 @@ And we can also find that low rates of yield have a wide range of numbers of inv
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
-ggplot(aes(x = LoanOriginalAmount, y = Investors, color = LenderYield), data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + geom_point(position = position_jitter(w = 500, h = 20)) + 
+ggplot(aes(x = LoanOriginalAmount, y = Investors, color = LenderYield), data = 
+         subset(simplified_pLD, ProsperRating..Alpha.!= "")) + 
+  geom_point(position = position_jitter(w = 500, h = 20)) + 
   scale_colour_gradient(low = "white", high="red") + 
   facet_wrap(~ ProsperRating..Alpha.)
 
@@ -1083,8 +1100,13 @@ As we can see, some dark points which climb up to the level of 1000 in the numbe
 ggthemr_reset()
 ggthemr('grape')
 ggplot(aes(x = LenderYield, y = Investors), 
-              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + geom_point(aes(color = ProsperRating..Alpha.), stat = 'summary', fun.y = mean) + facet_wrap(~ ProsperRating..Alpha.) + 
-  scale_color_brewer(type = 'seq', guide = guide_legend(title = "Prosper Rating", override.aes = list(alpha = 1, size = 2), reverse=T)) 
+              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + 
+  geom_point(aes(color = ProsperRating..Alpha.), stat = 'summary', 
+             fun.y = mean) + facet_wrap(~ ProsperRating..Alpha.) + 
+  scale_color_brewer(type = 'seq', guide = 
+                       guide_legend(title = "Prosper Rating", 
+                                    override.aes = 
+                                      list(alpha = 1, size = 2), reverse=T)) 
 ```
 
 Even on the same level of yield, the AA-grade borrowers are likely to gain more investors.
@@ -1098,8 +1120,13 @@ Next, I want to see the another side of "attraction" of the loan : averagely, ho
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 ggplot(aes(x = LenderYield, y = LoanOriginalAmount/Investors), 
-              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + geom_point(aes(color = ProsperRating..Alpha.), stat = 'summary', fun.y = mean) + facet_wrap(~ ProsperRating..Alpha., scales = "free") + 
-  scale_color_brewer(type = 'seq', guide = guide_legend(title = "Prosper Rating", override.aes = list(alpha = 1, size = 2), reverse=T)) 
+              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) +
+  geom_point(aes(color = ProsperRating..Alpha.), stat = 'summary', fun.y = mean) + 
+  facet_wrap(~ ProsperRating..Alpha., scales = "free") + 
+  scale_color_brewer(type = 'seq', guide = 
+                       guide_legend(title = "Prosper Rating", 
+                                    override.aes = 
+                                      list(alpha = 1, size = 2), reverse=T)) 
 ```
 
 The differences of outliers between different grades become so obvious. From HR-grade to C-grade, investors are going to invest more and more. From C-grade to AA-grade, the amount of individual investment start to shrink. But we should notice there are vertical straight lines staying on the ground in every graphs, indicating that the majority of investors just want to invest in a small number.
@@ -1112,7 +1139,8 @@ simplified_pLD$Term <- factor(simplified_pLD$Term, levels = sort(unique(simplifi
 ggthemr('earth')
 
 ggplot(aes(x = LenderYield, y = LoanOriginalAmount/Investors, group=Term), 
-              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + geom_point(aes(shape=Term, color=Term), stat = 'summary', fun.y = mean) + 
+              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + 
+  geom_point(aes(shape=Term, color=Term), stat = 'summary', fun.y = mean) + 
   facet_wrap(~ ProsperRating..Alpha., scales = "free") 
 ```
 
@@ -1125,7 +1153,10 @@ In general, C-grade and B-grade can attract investors to invest in larger amount
 ggthemr('grape')
 
 ggplot(aes(x = LenderYield, y = LoanOriginalAmount/Investors), 
-              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + geom_point(aes(color = ProsperRating..Alpha.), stat = 'summary', fun.y = mean) + facet_wrap(~ Term) + scale_color_brewer(type = 'seq') 
+              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + 
+  geom_point(aes(color = ProsperRating..Alpha.), stat = 'summary', 
+             fun.y = mean) + 
+  facet_wrap(~ Term) + scale_color_brewer(type = 'seq') 
 
 ```
 
@@ -1246,8 +1277,13 @@ levels(simplified_pLD$Term) <- c("1-year-loan", "3-year-loan", "5-year-loan")
 ggthemr('grape')
 theme_update(plot.title = element_text(hjust = 0.5))
 ggplot(aes(x = LenderYield, y = LoanOriginalAmount/Investors), 
-              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + geom_point(aes(color = ProsperRating..Alpha.), stat = 'summary', fun.y = mean) + facet_wrap(~ Term) + 
-  scale_color_brewer(type = 'seq', guide = guide_legend(title = "Prosper Rating", override.aes = list(alpha = 1, size = 2), reverse=T))  + 
+              data = subset(simplified_pLD, ProsperRating..Alpha.!= "")) + 
+  geom_point(aes(color = ProsperRating..Alpha.), stat = 'summary', 
+             fun.y = mean) + facet_wrap(~ Term) + 
+  scale_color_brewer(type = 'seq', guide = 
+                       guide_legend(title = "Prosper Rating", 
+                                    override.aes = list(alpha = 1, size = 2), 
+                                    reverse=T)) +
   labs(y = "Average investing amount of an investor (in dollar) ", 
        x = "Rate of Lender Yield", 
        title = "Average Investing amount of an investor by Lender Yield, 
