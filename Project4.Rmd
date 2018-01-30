@@ -183,7 +183,8 @@ It seems like a reasonable distribution, because in most of the time, the distri
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #StatedMonthlyIncome
 ggplot(aes(StatedMonthlyIncome), 
-       data = subset(pLD, !is.na(StatedMonthlyIncome))) + geom_histogram() + scale_x_continuous(limits = c(0, 40000)) + geom_freqpoly() 
+       data = subset(pLD, !is.na(StatedMonthlyIncome))) + 
+  geom_histogram() + scale_x_continuous(limits = c(0, 40000)) + geom_freqpoly() 
 ```
 
 It has the similar form of slightly Skewed distribution, which needs the log function to become a normal distribution.
@@ -239,7 +240,9 @@ During my research, no evidence has been found to show that the credit score ran
 First of all, we need to make a subset including these variables or relative variables in order to examine them with a closer look.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-grade_comparation <- pLD[c("LoanStatus", "CreditGrade", "ProsperRating..Alpha.", "ProsperScore", "CreditScoreRangeLower", "CreditScoreRangeUpper")]
+grade_comparation <- pLD[c("LoanStatus", "CreditGrade", "ProsperRating..Alpha.", 
+                           "ProsperScore", "CreditScoreRangeLower", 
+                           "CreditScoreRangeUpper")]
 ```
 
 The distribution of Credit Score Range Upper when the Credit Grade is equal to E:
@@ -714,7 +717,9 @@ ggpairs(simplified_pLD,
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-simplified_pLD_numeric <- pLD[c("Term", "LoanOriginalAmount", "LenderYield", "ProsperRating..numeric.", "ProsperScore", "StatedMonthlyIncome", 
+simplified_pLD_numeric <- pLD[c("Term", "LoanOriginalAmount", "LenderYield", 
+                                "ProsperRating..numeric.", "ProsperScore", 
+                                "StatedMonthlyIncome", 
                                 "AverageScore", "Investors")]
 
 cor(simplified_pLD_numeric, use = "complete.obs")
